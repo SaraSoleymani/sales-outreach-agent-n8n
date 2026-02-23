@@ -79,5 +79,5 @@ If you downloaded this and gave it a try — I'd love to hear how it went. Drop 
 
 ---
 
-*Part of the [Building with Agentic AI](https://www.linkedin.com) series — weekly frameworks, real examples, and practical workflows. No hype.*
+*Part of my 10 Week Building with Agentic AI series — weekly frameworks, real examples, and practical workflows. No hype.*
 *Folllow the serries eitehr on my [LinkedIn](https://www.linkedin.com/in/sarasoleymani/) or [Medium](https://sarasoleymani.medium.com/). 
