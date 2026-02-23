@@ -1,0 +1,634 @@
+{
+  "name": "Sales Outreach Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "23322b91-4086-4d1e-b984-e244ec780ca3",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        432
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d4626d65-3a76-4e2b-990d-accc7cb1ceac",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1K5Xe06Rt9GzUF7yl6lUGBrzuy_LBUghbQz8Q5iEM8Uo",
+          "mode": "list",
+          "cachedResultName": "Purchase List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K5Xe06Rt9GzUF7yl6lUGBrzuy_LBUghbQz8Q5iEM8Uo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1427185263,
+          "mode": "list",
+          "cachedResultName": "Portfolio",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K5Xe06Rt9GzUF7yl6lUGBrzuy_LBUghbQz8Q5iEM8Uo/edit#gid=1427185263"
+        },
+        "options": {}
+      },
+      "id": "957a8fc5-8cf3-442d-84a8-01c66d864595",
+      "name": "Read Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -2016,
+        512
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ywegwqd4W0OwuWNN",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "filterByFormula": "={Email}='{{ $json.email }}'",
+        "options": {}
+      },
+      "id": "f597cd4d-3695-4879-8582-ed9919feb1c0",
+      "name": "Check CRM",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond_contacted",
+              "leftValue": "={{ $json.records.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "431b2232-63ab-454e-9418-b370c53be3c1",
+      "name": "Previously Contacted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1696,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "5120e9b1-ad35-4385-a22e-32b76758b97d",
+      "name": "Update Follow-Up",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        -1472,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "=You are an expert B2B sales researcher and copywriter. Your job is to research a prospect and write a highly personalized cold outreach email.\n\nHere is the lead information:\n- Name: {{ $('Read Leads').item.json.name }}\n- Title: {{ $('Read Leads').item.json.title }}\n- Company: {{ $('Read Leads').item.json.company }}\n- Email: {{ $('Read Leads').item.json.email }}\n- LinkedIn URL: {{ $('Read Leads').item.json.linkedin_url }}\n\nYour steps:\n1. Use the search tool to find recent news about {{ $('Read Leads').item.json.company }} (search: \"{{ $('Read Leads').item.json.company }} news 2025\")\n2. Use the search tool to find recent activity or posts by {{ $('Read Leads').item.json.name }} (search: \"{{ $('Read Leads').item.json.name }} {{ $('Read Leads').item.json.company }} LinkedIn\")\n3. Using the research you gathered, write a personalized cold outreach email following these rules:\n   - Open with a specific hook from real news or their activity — never use \"I hope this finds you well\"\n   - Keep the total email under 150 words\n   - Focus on ROI and business value\n   - End with one low-friction CTA (e.g. a 15-min call)\n   - No buzzwords or generic phrases\n\nRespond ONLY in this exact format when done:\nSubject: <subject line>\nBody:\n<email body>",
+        "options": {
+          "systemMessage": "You are a precise sales assistant. Always complete your research steps before writing. Never fabricate company news — only use what the search tool returns. If search returns nothing useful, write a value-based email without a news hook."
+        }
+      },
+      "id": "93fb7d81-e146-42d5-929b-206dd83a8c86",
+      "name": "Research & Draft Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1472,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "model": "claude-opus-4-6",
+        "options": {}
+      },
+      "id": "d5bf9999-f9c0-4c3f-9f67-ad87a008bff9",
+      "name": "Claude (Agent LLM)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "parametersBody": {
+          "values": [
+            {}
+          ]
+        }
+      },
+      "id": "0acceb14-3fa7-446e-9a81-f567ed6a06ca",
+      "name": "Serper Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        656
+      ],
+      "description": "Search the web for information about a company or person",
+      "toolDescription": "Search the web. Input should be a search query string."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond_dnc",
+              "leftValue": "={{ $('Read Leads').item.json.do_not_contact }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "75588e05-300e-4fd3-bc30-30d8ddb7a186",
+      "name": "Do Not Contact?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b93223c1-d002-49c9-8aeb-bec1c514392a",
+      "name": "Skip DNC Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -992,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond_wordcount",
+              "leftValue": "={{ $('Research & Draft Agent').item.json.output.split(' ').length }}",
+              "rightValue": 150,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "efdd6ba3-74b3-49bb-b12b-e76ea279e9b7",
+      "name": "Over 150 Words?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "cond_senior",
+              "leftValue": "={{ $('Read Leads').item.json.title }}",
+              "rightValue": "VP|Vice President|SVP|EVP|C-Suite|CEO|CFO|COO|CTO|CMO|President|Chief|Director",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3e713182-8674-477d-9e78-8eef2259ee41",
+      "name": "Senior Lead (VP+)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#sales-approvals",
+          "mode": "name"
+        },
+        "text": ":mailbox_with_mail: *Outreach Approval Required — Senior Lead*\n\n*Lead:* {{ $('Read Leads').item.json.name }}\n*Title:* {{ $('Read Leads').item.json.title }}\n*Company:* {{ $('Read Leads').item.json.company }}\n*Email:* {{ $('Read Leads').item.json.email }}\n\n*Drafted Email:*\n```\n{{ $('Research & Draft Agent').item.json.output }}\n```\n\nReact :white_check_mark: to approve and continue the workflow.",
+        "otherOptions": {}
+      },
+      "id": "7c118f9e-a1d6-464f-9eb9-55e94e0d6af5",
+      "name": "Send for Human Approval",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        448
+      ],
+      "webhookId": "a139bf90-104b-467a-ba99-083a23bbb616"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "d522618a-1e3e-4374-9cd2-472f6a63f9be",
+      "name": "Wait for Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        64,
+        448
+      ],
+      "webhookId": "35a18c67-f282-44ed-b2c3-9f6e0608b59c"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Read Leads').item.json.email }}",
+        "subject": "={{ $('Research & Draft Agent').item.json.output.match(/Subject:\\s*(.+)/)?.[1]?.trim() || 'Quick thought on ' + $('Read Leads').item.json.company }}",
+        "message": "={{ $('Research & Draft Agent').item.json.output.replace(/Subject:\\s*.+\\n/, '').replace(/^Body:\\s*/i, '').trim() }}",
+        "options": {}
+      },
+      "id": "08ec169b-152c-45c6-8e43-12dbda923cb1",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        240,
+        656
+      ],
+      "webhookId": "0595f9f9-d764-441f-9d1d-a04807ab464e"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "4afdf122-dc75-40a2-a346-5b262eaf64ad",
+      "name": "Log in CRM",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        384,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        384
+      ],
+      "id": "87cab76d-e6c0-48a2-8973-ef8bd7205bd4",
+      "name": "Shorten Email",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZxWXGlgxHfdhgr6b",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Leads": {
+      "main": [
+        [
+          {
+            "node": "Check CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check CRM": {
+      "main": [
+        [
+          {
+            "node": "Previously Contacted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Previously Contacted?": {
+      "main": [
+        [
+          {
+            "node": "Update Follow-Up",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Research & Draft Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude (Agent LLM)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research & Draft Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serper Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research & Draft Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research & Draft Agent": {
+      "main": [
+        [
+          {
+            "node": "Do Not Contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Do Not Contact?": {
+      "main": [
+        [
+          {
+            "node": "Skip DNC Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Over 150 Words?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Over 150 Words?": {
+      "main": [
+        [
+          {
+            "node": "Shorten Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Senior Lead (VP+)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Senior Lead (VP+)?": {
+      "main": [
+        [
+          {
+            "node": "Send for Human Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send for Human Approval": {
+      "main": [
+        [
+          {
+            "node": "Wait for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Approval": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Log in CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shorten Email": {
+      "main": [
+        [
+          {
+            "node": "Senior Lead (VP+)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "43d1b5b7-724d-4f73-a3fd-9c222e488c89",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d2926e605d262bee5909c7941095358b0b2fbb483629d7cc273c8d86e3c55860"
+  },
+  "id": "InTmXlrLCGjRgA0U",
+  "tags": []
+}
