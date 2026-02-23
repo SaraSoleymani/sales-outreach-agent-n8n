@@ -2,7 +2,7 @@
 
 A fully automated sales outreach agent built with n8n and Claude. It researches leads, drafts personalized emails, enforces guardrails, routes senior contacts for human approval, and logs everything back to your CRM.
 
-Built and shared as part of my [Building with Agentic AI](https://www.linkedin.com) newsletter series.
+Built and shared as part of my 10 Week Building with Agentic AI series.Folllow the serries eitehr on my [LinkedIn](https://www.linkedin.com/in/sarasoleymani/) or [Medium](https://sarasoleymani.medium.com/)
 
 ---
 
